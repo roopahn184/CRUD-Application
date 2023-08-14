@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Messaging App</title>
+</head>
+<body>
+  <h1>Real-Time Messaging App</h1>
+  <div>
+    <input type="text" id="username" placeholder="Enter your username">
+    <button id="joinBtn">Join</button>
+  </div>
+  <div id="chatContainer" style="display: none;">
+    <div id="userList"></div>
+    <div id="chat">
+      <div id="messages"></div>
+      <input type="text" id="messageInput" placeholder="Type your message...">
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const joinButton = document.getElementById('joinBtn');
+    const chatContainer = document.getElementById('chatContainer');
+    const userList = document.getElementById('userList');
+    const messages = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendBtn');
+
+    let username = '';
+
+    joinButton.addEventListener('click', () => {
+      username = document.getElementById('username').value;
+      if (username) {
+        socket.emit('join', username);
+        document.getElementById('username').disabled = true;
+        joinButton.disabled = true;
+        chatContainer.style.display = 'block';
+      }
+    });
+
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value;
+      if (message) {
+        socket.emit('sendMessage', message);
+        messageInput.value = '';
+      }
+    });
+
+    socket.on('userJoined', (username) => {
+      const userItem = document.createElement('div');
+      userItem.innerText = `${username} joined the chat`;
+      userList.appendChild(userItem);
+    });
+
+    socket.on('userLeft', (username) => {
+      const userItem = document.createElement('div');
+      userItem.innerText = `${username} left the chat`;
+      userList.appendChild(userItem);
+    });
+
+    socket.on('receiveMessage', (data) => {
+      const messageItem = document.createElement('div');
+      messageItem.innerText = `${data.username}: ${data.message}`;
+      messages.appendChild(messageItem);
+    });
+  </script>
+</body>
+</html>
